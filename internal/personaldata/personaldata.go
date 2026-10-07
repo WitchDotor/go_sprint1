@@ -1,9 +1,11 @@
 package personaldata
 
 type Personal struct {
-	// TODO: добавить поля
+	Name string,
+	Weight float64б
+	Height float64,
 }
 
 func (p Personal) Print() {
-	// TODO: реализовать функцию
+	Printf("Имя: %s\t Вес: %f\t Рост: %f")
 }
