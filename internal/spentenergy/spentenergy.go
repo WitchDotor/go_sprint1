@@ -1,10 +1,8 @@
 package spentenergy
 
 import (
-	"time"
 	"fmt"
-	"strconv"
-	"strings"	
+	"time"
 )
 
 // Основные константы, необходимые для расчетов.
@@ -13,24 +11,25 @@ const (
 	minInH                     = 60   // количество минут в часе.
 	stepLengthCoefficient      = 0.45 // коэффициент для расчета длины шага на основе роста.
 	walkingCaloriesCoefficient = 0.5  // коэффициент для расчета калорий при ходьбе.
-	minWeight = 20.0
-	maxWeight = 200.0
-	minHeight = 50.0
-	maxHeight = 280.0
-	maxSteps  = 200000
-	maxDuration = 24 * time.Hour
+	minWeight                  = 20.0
+	maxWeight                  = 200.0
+	minHeight                  = 50.0
+	maxHeight                  = 280.0
+	maxSteps                   = 200000
+	maxDuration                = 24 * time.Hour
+
 )
 
 func Distance(steps int, height float64) float64 {
-	return steps * stepLengthCoefficient * height
+	return float64(steps) * stepLengthCoefficient * height
 }
 
 func MeanSpeed(steps int, height float64, duration time.Duration) float64 {
 	if duration == 0 {
 		return 0
-	} else { 
-		return Distance / (duration / time.Hour)
 	}
+
+	return Distance(steps, height) / float64(duration/time.Hour)
 }
 
 func checkValidData(steps int, weight, height float64, duration time.Duration) error {
@@ -46,33 +45,27 @@ func checkValidData(steps int, weight, height float64, duration time.Duration) e
 		return fmt.Errorf("%w: got %.2f, expected range [%.1f, %.1f]",
 			ErrInvalidHeight, height, minHeight, maxHeight)
 	case duration <= 0 || duration > maxDuration:
-		return fmt.Errorf("%w: got %s, expected range (0, %s]",
-			ErrInvalidDuration, duration, maxDuration)
+		return fmt.Errorf("%w: got %s, expected range (0, %s]", ErrInvalidDuration, duration, maxDuration)
 	}
 	return nil
 }
 
 func WalkingSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
-	var data_error := checkValidData(steps, weight, height, duration)
-	val result int
-	if data_error == nil{
-		result = (walkingCaloriesCoefficient * 
-		(weight * MeanSpeed(steps, height, duration) * duration/time.Minute) / duration/time.Hour)
+	var dataError = checkValidData(steps, weight, height, duration)
+	var result float64
+	if dataError == nil {
+		result = walkingCaloriesCoefficient *
+			(weight * MeanSpeed(steps, height, duration) * float64(duration) / float64(time.Minute)) / float64(duration/time.Hour)
 	}
-	
-	return result, data_error
+	return result, dataError
 }
 
 func RunningSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
-	var data_error := checkValidData(steps, weight, height, duration)
-	val result int
-	if data_error == nil{
-		result =  ((weight * MeanSpeed(steps, height, duration) * duration/time.Minute) 
-		/ duration/time.Hour)
+	var dataError = checkValidData(steps, weight, height, duration)
+	var result float64
+	if dataError == nil {
+		result = weight * MeanSpeed(steps, height, duration) * float64(duration/time.Minute) / float64(duration/time.Hour)
 	}
-	
-	return result, data_error
+
+	return result, dataError
 }
-
-
-

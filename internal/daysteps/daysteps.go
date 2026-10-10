@@ -1,23 +1,31 @@
 package daysteps
 
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/Yandex-Practicum/tracker/internal/personaldata"
+)
+
 type DaySteps struct {
-	Steps int,
-	Duration time.Duration,
-	personaldata.Personal,
+	Steps int;
+	Duration time.Duration;
+	personaldata.Personal;
 }
 
 func (ds *DaySteps) Parse(datastring string) (err error) {
-	data := datastring.Split(s, ",")
+	data := strings.Split(datastring, ",")
 	if len(data) != 2 {
-		Steps = strconv.0
+		ds.Steps = "0"
 		TrainingType = ""
-		Duration = 0
+		ds.Duration = 0
 		return fmt.Errorf("Неправильный вормат данных, нет поля", len(data))
 	}
 
-	for i, i++, len(data) {
+	for i, len(data), i++ {
 		if data[i] == "" {
-			Steps = strconv.0
+			Steps = strconv(0)
 			TrainingType = ""
 			Duration = 0
 			return fmt.Errorf("Неправильный формат данных, пустое поле", data[i], err)
@@ -25,7 +33,7 @@ func (ds *DaySteps) Parse(datastring string) (err error) {
 		}
 		if i == 1 {
 			if data[i] != "бег" or data[i] != "ходьба"{
-				Steps = strconv.0
+				Steps = strconv(0)
 				TrainingType = ""
 				Duration = 0
 				return fmt.Errorf("Неправильный формат данных, неверный формат тренировки", data[i], err)

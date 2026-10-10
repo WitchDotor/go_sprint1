@@ -1,75 +1,80 @@
 package trainings
 
 import (
-	"time"
 	"fmt"
 	"strconv"
 	"strings"
-	"spentenergy"	
+	"time"
+
+	"github.com/Yandex-Practicum/tracker/internal/personaldata"
+	"github.com/Yandex-Practicum/tracker/internal/spentenergy"
 )
 
 type Training struct {
-	Steps int,
-	TrainingType string,
-	Duration time.Duration,
-	personaldata.Personal ,
+	Steps        int
+	TrainingType string
+	Duration     time.Duration
+	personaldata.Personal
 }
 
 func (t *Training) Parse(datastring string) (err error) {
-	data := datastring.Split(s, ",")
+	data := strings.Split(datastring, ",")
 	if len(data) != 3 {
-		Steps = strconv.0
-		TrainingType = ""
-		Duration = 0
-		return fmt.Errorf("Неправильный вормат данных, нет поля", len(data))
+		t.Steps = 0
+		t.TrainingType = ""
+		t.Duration = 0
+		return fmt.Errorf("неправильный формат данных, нет поля")
 	}
 
-	for i, i++, len(data) {
+	for i := 0; i < len(data); i++ {
 		if data[i] == "" {
-			Steps = strconv.0
-			TrainingType = ""
-			Duration = 0
-			return fmt.Errorf("Неправильный формат данных, пустое поле", data[i], err)
+			t.Steps = 0
+			t.TrainingType = ""
+			t.Duration = 0
+			return fmt.Errorf("неправильный формат данных, пустое поле")
 
 		}
 		if i == 1 {
-			if data[i] != "бег" or data[i] != "ходьба"{
-				Steps = strconv.0
-				TrainingType = ""
-				Duration = 0
-				return fmt.Errorf("Неправильный формат данных, неверный формат тренировки", data[i], err)
+			if data[i] != "бег" && data[i] != "ходьба" {
+				t.Steps = 0
+				t.TrainingType = ""
+				t.Duration = 0
+				return fmt.Errorf()
 			}
 		}
 	}
-	
-	&Steps = strconv.Atoi(data[0])
-	&TrainingType = data[1]
-	&Duration = time.ParseDuration(data[2])
-	return nill
+
+	t.Steps, _ = strconv.Atoi(data[0])
+	t.TrainingType = data[1]
+	t.Duration, _ = time.ParseDuration(data[2])
+	return nil
 }
 
 func (t Training) ActionInfo() (string, error) {
-	height = personaldata.Height
-	weight = personaldata.Weight
-	speed = spentenergy.MeanSpeed(steps=Steps, height=personaldata.Height, duration=Duration)
+	var height = t.Personal.Height
+	var weight = t.Personal.Weight
+	var speed = spentenergy.MeanSpeed(t.Steps, height, t.Duration)
+	var energy float64
+	var energyError error
 
-	switch TrainingType{
-		case "ходьба":
-			energy = spentenergy.WalkingSpentCalories(steps=Steps, weight=weight, height=height, duration=Duration)
-		case "бег":
-			energy = spentenergy.RunningSpentCalories(steps=Steps, weight=weight, height=height, duration=Duration)
-		default:
-			return "", fmt.Errorf("Неправильный вормат данных, нет поля", TrainingType)
-		}
+	switch t.TrainingType {
+	case "ходьба":
+		energy, energyError = spentenergy.WalkingSpentCalories(t.Steps, weight, height, t.Duration)
+	case "бег":
+		energy, energyError = spentenergy.RunningSpentCalories(t.Steps, weight, height, t.Duration)
+	default:
+		return "", fmt.Errorf("Неправильный вормат данных, нет поля", t.TrainingType)
+	}
 
-	
-	// TODO: реализовать функцию
-	str_type="Тип тренировки: %s", TrainingType
-	str_dur="Длительность: %sd", Duration
-	str_dist="Дистанция: %sf", Distance
-	str_speed="Скорость: %sf", speed
-	str_energy"Сожгли калорий: %sf", energy
+	if energyError == nil {
 
-	return str_type+str_dur+str_dist+str_speed+str_energy, nill
-	
+	}
+	var distance = float64(t.Duration) * speed
+	var strType = fmt.Sprintf("Тип тренировки: %s", t.TrainingType)
+	var strDur = fmt.Sprintf("Длительность: %ds", t.Duration)
+	var strDist = fmt.Sprintf("Дистанция: %.2f", distance)
+	var strSpeed = fmt.Sprintf("Скорость: %.2f", speed)
+	var strEnergy = fmt.Sprintf("Сожжено калорий: %.0f", energy)
+	return strType + strDur + strDist + strSpeed + strEnergy, nil
+
 }
