@@ -3,6 +3,9 @@ package spentenergy
 import (
 	"fmt"
 	"time"
+
+	"github.com/Yandex-Practicum/tracker/internal/fitneserrors"
+	_ "github.com/Yandex-Practicum/tracker/internal/fitneserrors"
 )
 
 // Основные константы, необходимые для расчетов.
@@ -17,7 +20,6 @@ const (
 	maxHeight                  = 280.0
 	maxSteps                   = 200000
 	maxDuration                = 24 * time.Hour
-
 )
 
 func Distance(steps int, height float64) float64 {
@@ -35,17 +37,17 @@ func MeanSpeed(steps int, height float64, duration time.Duration) float64 {
 func checkValidData(steps int, weight, height float64, duration time.Duration) error {
 	switch {
 	case steps <= 0:
-		return fmt.Errorf("%w: got %d", ErrInvalidSteps, steps)
+		return fmt.Errorf("%w: got %d", fitneserrors.ErrInvalidSteps, steps)
 	case steps > maxSteps:
 		return fmt.Errorf("steps too large: got %d, max %d", steps, maxSteps)
 	case weight < minWeight || weight > maxWeight:
 		return fmt.Errorf("%w: got %.2f, expected range [%.1f, %.1f]",
-			ErrInvalidWeight, weight, minWeight, maxWeight)
+			fitneserrors.ErrInvalidWeight, weight, minWeight, maxWeight)
 	case height < minHeight || height > maxHeight:
 		return fmt.Errorf("%w: got %.2f, expected range [%.1f, %.1f]",
-			ErrInvalidHeight, height, minHeight, maxHeight)
+			fitneserrors.ErrInvalidHeight, height, minHeight, maxHeight)
 	case duration <= 0 || duration > maxDuration:
-		return fmt.Errorf("%w: got %s, expected range (0, %s]", ErrInvalidDuration, duration, maxDuration)
+		return fmt.Errorf("%w: got %s, expected range (0, %s]", fitneserrors.ErrInvalidDuration, duration, maxDuration)
 	}
 	return nil
 }

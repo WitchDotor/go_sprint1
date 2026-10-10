@@ -8,4 +8,5 @@ var (
 	ErrInvalidHeight   = errors.New("неправильный рост")
 	ErrInvalidDuration = errors.New("неправильная продолжительность")
 	ErrTrainingType    = errors.New("неверный формат тренировки")
+	ErrInvalidFormat   = errors.New("неверный формат")
 )

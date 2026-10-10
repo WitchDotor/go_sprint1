@@ -2,46 +2,53 @@ package daysteps
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Yandex-Practicum/tracker/internal/fitneserrors"
 	"github.com/Yandex-Practicum/tracker/internal/personaldata"
 )
 
 type DaySteps struct {
-	Steps int;
-	Duration time.Duration;
-	personaldata.Personal;
+	Steps    int
+	Duration time.Duration
+	personaldata.Personal
 }
 
 func (ds *DaySteps) Parse(datastring string) (err error) {
 	data := strings.Split(datastring, ",")
+	var parseErr error
 	if len(data) != 2 {
-		ds.Steps = "0"
-		TrainingType = ""
+		ds.Steps = 0
 		ds.Duration = 0
-		return fmt.Errorf("Неправильный вормат данных, нет поля", len(data))
+		parseErr = fitneserrors.ErrInvalidFormat
+		return fmt.Errorf("%w", parseErr)
 	}
 
-	for i, len(data), i++ {
+	for i := range data {
 		if data[i] == "" {
-			Steps = strconv(0)
-			TrainingType = ""
-			Duration = 0
-			return fmt.Errorf("Неправильный формат данных, пустое поле", data[i], err)
-
-		}
-		if i == 1 {
-			if data[i] != "бег" or data[i] != "ходьба"{
-				Steps = strconv(0)
-				TrainingType = ""
-				Duration = 0
-				return fmt.Errorf("Неправильный формат данных, неверный формат тренировки", data[i], err)
-			}
+			ds.Steps = 0
+			ds.Duration = 0
+			parseErr = fitneserrors.ErrInvalidFormat
+			return fmt.Errorf("%w", parseErr)
 		}
 	}
+	ds.Duration, parseErr = time.ParseDuration(data[1])
+	ds.Steps, parseErr = strconv.Atoi(data[0])
+
+	if parseErr != nil {
+		ds.Duration = 0
+		ds.Steps = 0
+	}
+	return parseErr
 }
 
 func (ds DaySteps) ActionInfo() (string, error) {
 	// TODO: реализовать функцию
+	var person = ds.Personal.Height
+	var distance = ds.Steps * ds.Personal.Height * stepLengthCoefficient
+	fmt.Printf("Количество шагов: %d.\n", ds.Steps)
+	fmt.Printf("Дистанция составила %sкм.\n", distance)
+	fmt.Printf("Вы сожгли %f ккал.\n", energy)
 }

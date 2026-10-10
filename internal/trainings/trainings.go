@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Yandex-Practicum/tracker/internal/fitneserrors"
 	"github.com/Yandex-Practicum/tracker/internal/personaldata"
 	"github.com/Yandex-Practicum/tracker/internal/spentenergy"
 )
@@ -23,15 +24,15 @@ func (t *Training) Parse(datastring string) (err error) {
 		t.Steps = 0
 		t.TrainingType = ""
 		t.Duration = 0
-		return fmt.Errorf("неправильный формат данных, нет поля")
+		return fmt.Errorf("%w", fitneserrors.ErrTrainingType)
 	}
 
-	for i := 0; i < len(data); i++ {
+	for i := range data {
 		if data[i] == "" {
 			t.Steps = 0
 			t.TrainingType = ""
 			t.Duration = 0
-			return fmt.Errorf("неправильный формат данных, пустое поле")
+			return fmt.Errorf("%w", fitneserrors.ErrTrainingType)
 
 		}
 		if i == 1 {
@@ -39,7 +40,7 @@ func (t *Training) Parse(datastring string) (err error) {
 				t.Steps = 0
 				t.TrainingType = ""
 				t.Duration = 0
-				return fmt.Errorf()
+				return fmt.Errorf("%w", fitneserrors.ErrTrainingType)
 			}
 		}
 	}
@@ -63,18 +64,18 @@ func (t Training) ActionInfo() (string, error) {
 	case "бег":
 		energy, energyError = spentenergy.RunningSpentCalories(t.Steps, weight, height, t.Duration)
 	default:
-		return "", fmt.Errorf("Неправильный вормат данных, нет поля", t.TrainingType)
+		return "", fmt.Errorf("%w", fitneserrors.ErrTrainingType)
 	}
 
 	if energyError == nil {
-
+		return "", energyError
 	}
 	var distance = float64(t.Duration) * speed
-	var strType = fmt.Sprintf("Тип тренировки: %s", t.TrainingType)
-	var strDur = fmt.Sprintf("Длительность: %ds", t.Duration)
-	var strDist = fmt.Sprintf("Дистанция: %.2f", distance)
-	var strSpeed = fmt.Sprintf("Скорость: %.2f", speed)
-	var strEnergy = fmt.Sprintf("Сожжено калорий: %.0f", energy)
+	var strType = fmt.Sprintf("Тип тренировки: %s.\n", t.TrainingType)
+	var strDur = fmt.Sprintf("Длительность: %ds.\n", t.Duration)
+	var strDist = fmt.Sprintf("Дистанция: %.2f.\n", distance)
+	var strSpeed = fmt.Sprintf("Скорость: %.2f.\n", speed)
+	var strEnergy = fmt.Sprintf("Сожжено калорий: %.0f.\n", energy)
 	return strType + strDur + strDist + strSpeed + strEnergy, nil
 
 }
