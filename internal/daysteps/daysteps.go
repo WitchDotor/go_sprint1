@@ -2,12 +2,14 @@ package daysteps
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Yandex-Practicum/tracker/internal/fitneserrors"
 	"github.com/Yandex-Practicum/tracker/internal/personaldata"
+	"github.com/Yandex-Practicum/tracker/internal/spentenergy"
 )
 
 type DaySteps struct {
@@ -16,8 +18,8 @@ type DaySteps struct {
 	personaldata.Personal
 }
 
-func (ds *DaySteps) Parse(datastring string) (err error) {
-	data := strings.Split(datastring, ",")
+func (ds *DaySteps) Parse(dataset string) (err error) {
+	data := strings.Split(dataset, ",")
 	var parseErr error
 	if len(data) != 2 {
 		ds.Steps = 0
@@ -26,13 +28,11 @@ func (ds *DaySteps) Parse(datastring string) (err error) {
 		return fmt.Errorf("%w", parseErr)
 	}
 
-	for i := range data {
-		if data[i] == "" {
-			ds.Steps = 0
-			ds.Duration = 0
-			parseErr = fitneserrors.ErrInvalidFormat
-			return fmt.Errorf("%w", parseErr)
-		}
+	if slices.Contains(data, "") {
+		ds.Steps = 0
+		ds.Duration = 0
+		parseErr = fitneserrors.ErrInvalidFormat
+		return fmt.Errorf("%w", parseErr)
 	}
 	ds.Duration, parseErr = time.ParseDuration(data[1])
 	ds.Steps, parseErr = strconv.Atoi(data[0])
@@ -45,10 +45,17 @@ func (ds *DaySteps) Parse(datastring string) (err error) {
 }
 
 func (ds DaySteps) ActionInfo() (string, error) {
-	// TODO: реализовать функцию
-	var person = ds.Personal.Height
-	var distance = ds.Steps * ds.Personal.Height * stepLengthCoefficient
-	fmt.Printf("Количество шагов: %d.\n", ds.Steps)
-	fmt.Printf("Дистанция составила %sкм.\n", distance)
-	fmt.Printf("Вы сожгли %f ккал.\n", energy)
+
+	var height = ds.Personal.Height
+	var weight = ds.Personal.Weight
+	var distance = spentenergy.Distance(ds.Steps, height)
+	var energy, actionError = spentenergy.WalkingSpentCalories(ds.Steps, weight, height, ds.Duration)
+	if actionError == nil {
+		return "", actionError
+	}
+
+	var stepString = fmt.Sprintf("Количество шагов: %d.\n", ds.Steps)
+	var distanceString = fmt.Sprintf("Дистанция составила %sкм.\n", distance)
+	var energyString = fmt.Sprintf("Вы сожгли %f ккал.\n", energy)
+	return stepString + distanceString + energyString, actionError
 }

@@ -18,8 +18,8 @@ type Training struct {
 	personaldata.Personal
 }
 
-func (t *Training) Parse(datastring string) (err error) {
-	data := strings.Split(datastring, ",")
+func (t *Training) Parse(dataset string) (err error) {
+	data := strings.Split(dataset, ",")
 	if len(data) != 3 {
 		t.Steps = 0
 		t.TrainingType = ""
@@ -77,5 +77,11 @@ func (t Training) ActionInfo() (string, error) {
 	var strSpeed = fmt.Sprintf("Скорость: %.2f.\n", speed)
 	var strEnergy = fmt.Sprintf("Сожжено калорий: %.0f.\n", energy)
 	return strType + strDur + strDist + strSpeed + strEnergy, nil
+}
 
+func (t *Training) Print() (string, error) {
+	var strSteps = fmt.Sprintf("%i\n", t.Steps)
+	var strTrainingType = fmt.Sprintf("%s\n", t.TrainingType)
+	var strDuration = fmt.Sprintf("%d\n", t.Duration)
+	return strSteps + strTrainingType + strDuration, nil
 }
