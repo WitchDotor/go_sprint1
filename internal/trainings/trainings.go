@@ -36,7 +36,7 @@ func (t *Training) Parse(dataset string) (err error) {
 
 		}
 		if i == 1 {
-			if data[i] != "бег" && data[i] != "ходьба" {
+			if data[i] != "Бег" && data[i] != "Ходьба" {
 				t.Steps = 0
 				t.TrainingType = ""
 				t.Duration = 0
@@ -59,15 +59,15 @@ func (t Training) ActionInfo() (string, error) {
 	var energyError error
 
 	switch t.TrainingType {
-	case "ходьба":
+	case "Ходьба":
 		energy, energyError = spentenergy.WalkingSpentCalories(t.Steps, weight, height, t.Duration)
-	case "бег":
+	case "Бег":
 		energy, energyError = spentenergy.RunningSpentCalories(t.Steps, weight, height, t.Duration)
 	default:
 		return "", fmt.Errorf("%w", fitneserrors.ErrTrainingType)
 	}
 
-	if energyError == nil {
+	if energyError != nil {
 		return "", energyError
 	}
 	var distance = float64(t.Duration) * speed
@@ -76,12 +76,14 @@ func (t Training) ActionInfo() (string, error) {
 	var strDist = fmt.Sprintf("Дистанция: %.2f.\n", distance)
 	var strSpeed = fmt.Sprintf("Скорость: %.2f.\n", speed)
 	var strEnergy = fmt.Sprintf("Сожжено калорий: %.0f.\n", energy)
-	return strType + strDur + strDist + strSpeed + strEnergy, nil
+	var strTraining = strType + strDur + strDist + strSpeed + strEnergy
+	return fmt.Sprintf("%s", strTraining), nil
 }
 
 func (t *Training) Print() (string, error) {
 	var strSteps = fmt.Sprintf("%i\n", t.Steps)
 	var strTrainingType = fmt.Sprintf("%s\n", t.TrainingType)
 	var strDuration = fmt.Sprintf("%d\n", t.Duration)
-	return strSteps + strTrainingType + strDuration, nil
+	var strTraining = strSteps + strTrainingType + strDuration
+	return fmt.Sprintf("%s", strTraining), nil
 }
