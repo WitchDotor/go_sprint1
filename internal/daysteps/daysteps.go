@@ -2,7 +2,6 @@ package daysteps
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -28,19 +27,18 @@ func (ds *DaySteps) Parse(dataset string) (err error) {
 		return fmt.Errorf("%w", parseErr)
 	}
 
-	if slices.Contains(data, "") {
-		ds.Steps = 0
+	dataSteps, parseErr := strconv.Atoi(data[0])
+	dataDuration, parseErr := time.ParseDuration(data[1])
+	if dataSteps <= 0 || dataDuration <= 0 {
 		ds.Duration = 0
+		ds.Steps = 0
 		parseErr = fitneserrors.ErrInvalidDataFormat
 		return fmt.Errorf("%w", parseErr)
 	}
-	ds.Duration, parseErr = time.ParseDuration(data[1])
-	ds.Steps, parseErr = strconv.Atoi(data[0])
 
-	if parseErr != nil {
-		ds.Duration = 0
-		ds.Steps = 0
-	}
+	ds.Duration = dataDuration
+	ds.Steps = dataSteps
+
 	return parseErr
 }
 
@@ -55,7 +53,7 @@ func (ds *DaySteps) ActionInfo() (string, error) {
 	}
 
 	var strSteps = fmt.Sprintf("Количество шагов: %d.\n", ds.Steps)
-	var strDist = fmt.Sprintf("Дистанция составила %.2fкм.\n", distance)
+	var strDist = fmt.Sprintf("Дистанция составила %.2f км.\n", distance)
 	var strEnergy = fmt.Sprintf("Вы сожгли %.2f ккал.\n", energy)
 	var strDayStep = strSteps + strDist + strEnergy
 	return strDayStep, nil

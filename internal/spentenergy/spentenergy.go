@@ -22,14 +22,13 @@ const (
 )
 
 func Distance(steps int, height float64) float64 {
-	return float64(steps) * stepLengthCoefficient * height
+	return float64(steps) * stepLengthCoefficient * height / 1000
 }
 
 func MeanSpeed(steps int, height float64, duration time.Duration) float64 {
-	if duration == 0 {
+	if duration <= 0 {
 		return 0
 	}
-
 	return Distance(steps, height) / duration.Hours()
 }
 
