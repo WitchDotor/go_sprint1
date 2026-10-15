@@ -11,56 +11,57 @@ import (
 	"github.com/Yandex-Practicum/tracker/internal/spentenergy"
 )
 
+// DaySteps содержит информацию о шагах за день.
 type DaySteps struct {
 	Steps    int
 	Duration time.Duration
 	personaldata.Personal
 }
 
-func (ds *DaySteps) Parse(dataset string) (err error) {
+// Parse разбирает строку формата "шаги,длительность".
+func (ds *DaySteps) Parse(dataset string) error {
+	ds.Steps = 0
+	ds.Duration = 0
+
 	data := strings.Split(dataset, ",")
-	var parseErr error
-	var stepsErr error
-	var durationErr error
-	if len(data) != 2 {
-		ds.Steps = 0
-		ds.Duration = 0
-		parseErr = fitneserrors.ErrInvalidDataFormat
-		return fmt.Errorf("%w", parseErr)
+	if len(data) != 2 || strings.Contains(dataset, " ") {
+		return fitneserrors.ErrInvalidDataFormat
 	}
 
-	dataSteps, stepsErr := strconv.Atoi(data[0])
-	dataDuration, durationErr := time.ParseDuration(data[1])
-	if dataSteps <= 0 || dataDuration <= 0 || stepsErr != nil || durationErr != nil {
-		ds.Duration = 0
-		ds.Steps = 0
-		parseErr = fitneserrors.ErrInvalidDataFormat
-		return fmt.Errorf("%w", parseErr)
+	dataSteps, err := strconv.Atoi(strings.TrimSpace(data[0]))
+	if err != nil {
+		return fitneserrors.ErrInvalidDataFormat
 	}
 
-	ds.Duration = dataDuration
+	dataDuration, err := time.ParseDuration(strings.TrimSpace(data[1]))
+	if err != nil {
+		return fitneserrors.ErrInvalidDataFormat
+	}
+
+	if dataSteps <= 0 || dataDuration <= 0 {
+		return fitneserrors.ErrInvalidDataFormat
+	}
+
 	ds.Steps = dataSteps
-
-	return parseErr
+	ds.Duration = dataDuration
+	return nil
 }
 
+// ActionInfo возвращает информацию о расстоянии и потраченных калориях.
 func (ds *DaySteps) ActionInfo() (string, error) {
-
-	var height = ds.Personal.Height
-	var weight = ds.Personal.Weight
-	var distance = spentenergy.Distance(ds.Steps, height)
-	var energy, actionError = spentenergy.WalkingSpentCalories(ds.Steps, weight, height, ds.Duration)
-	if actionError != nil {
-		return "", actionError
+	distance := spentenergy.Distance(ds.Steps, ds.Height)
+	energy, err := spentenergy.WalkingSpentCalories(ds.Steps, ds.Weight, ds.Height, ds.Duration)
+	if err != nil {
+		return "", err
 	}
 
-	var strSteps = fmt.Sprintf("Количество шагов: %d.\n", ds.Steps)
-	var strDist = fmt.Sprintf("Дистанция составила %.2f км.\n", distance)
-	var strEnergy = fmt.Sprintf("Вы сожгли %.2f ккал.\n", energy)
-	var strDayStep = strSteps + strDist + strEnergy
-	return strDayStep, nil
+	return fmt.Sprintf(
+		"Количество шагов: %d.\nДистанция составила %.2f км.\nВы сожгли %.2f ккал.\n",
+		ds.Steps, distance, energy,
+	), nil
 }
 
+// Print выводит персональные данные.
 func (ds *DaySteps) Print() {
 	ds.Personal.Print()
 }

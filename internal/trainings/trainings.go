@@ -11,6 +11,7 @@ import (
 	"github.com/Yandex-Practicum/tracker/internal/spentenergy"
 )
 
+// Training описывает тренировку: количество шагов, тип и длительность.
 type Training struct {
 	Steps        int
 	TrainingType string
@@ -18,70 +19,68 @@ type Training struct {
 	personaldata.Personal
 }
 
-func (t *Training) Parse(dataset string) (err error) {
+// Parse разбирает строку формата "шаги,тип,длительность".
+func (t *Training) Parse(dataset string) error {
+	t.Steps = 0
+	t.TrainingType = ""
+	t.Duration = 0
+
 	data := strings.Split(dataset, ",")
-	var stepsErr error
-	var durationErr error
 	if len(data) != 3 {
-		t.Steps = 0
-		t.TrainingType = ""
-		t.Duration = 0
-		return fmt.Errorf("%w", fitneserrors.ErrTrainingType)
-	}
-	steps, stepsErr := strconv.Atoi(data[0])
-	trainingType := data[1]
-	trainingDuration, durationErr := time.ParseDuration(data[2])
-
-	if steps <= 0 || trainingDuration <= 0 || stepsErr != nil || durationErr != nil {
-		t.Steps = 0
-		t.TrainingType = ""
-		t.Duration = 0
-		return fmt.Errorf("%w", fitneserrors.ErrTrainingType)
+		return fitneserrors.ErrInvalidDataFormat
 	}
 
-	if trainingType != "Бег" && trainingType != "Ходьба" {
-		trainingType = "Неизвестный тип тренировки"
+	steps, err := strconv.Atoi(strings.TrimSpace(data[0]))
+	if err != nil {
+		return fitneserrors.ErrInvalidDataFormat
+	}
+
+	duration, err := time.ParseDuration(strings.TrimSpace(data[2]))
+	if err != nil {
+		return fitneserrors.ErrInvalidDataFormat
+	}
+
+	if steps <= 0 || duration <= 0 {
+		return fitneserrors.ErrInvalidDataFormat
 	}
 
 	t.Steps = steps
-	t.TrainingType = data[1]
-	t.Duration = trainingDuration
+	t.TrainingType = strings.TrimSpace(data[1])
+	t.Duration = duration
 	return nil
 }
 
-func (t Training) ActionInfo() (string, error) {
-	var height = t.Personal.Height
-	var weight = t.Personal.Weight
-	var speed = spentenergy.MeanSpeed(t.Steps, height, t.Duration)
+// ActionInfo возвращает текстовую сводку по тренировке.
+func (t *Training) ActionInfo() (string, error) {
 	var energy float64
-	var energyError error
+	var err error
 
 	switch t.TrainingType {
 	case "Ходьба":
-		energy, energyError = spentenergy.WalkingSpentCalories(t.Steps, weight, height, t.Duration)
+		energy, err = spentenergy.WalkingSpentCalories(t.Steps, t.Weight, t.Height, t.Duration)
 	case "Бег":
-		energy, energyError = spentenergy.RunningSpentCalories(t.Steps, weight, height, t.Duration)
+		energy, err = spentenergy.RunningSpentCalories(t.Steps, t.Weight, t.Height, t.Duration)
 	default:
-		return "", fmt.Errorf("%w", fitneserrors.ErrTrainingType)
+		return "", fitneserrors.ErrTrainingType
+	}
+	if err != nil {
+		return "", err
 	}
 
-	if energyError != nil {
-		return "", energyError
-	}
-	var distance = spentenergy.Distance(t.Steps, height)
-	var strType = fmt.Sprintf("Тип тренировки: %s\n", t.TrainingType)
-	var strDur = fmt.Sprintf("Длительность: %.2f ч.\n", t.Duration.Hours())
-	var strDist = fmt.Sprintf("Дистанция: %.2f км.\n", distance)
-	var strSpeed = fmt.Sprintf("Скорость: %.2f км/ч\n", speed)
-	var strEnergy = fmt.Sprintf("Сожгли калорий: %.2f\n", energy)
-	var strTraining = strType + strDur + strDist + strSpeed + strEnergy
-	return fmt.Sprintf("%s", strTraining), nil
+	distance := spentenergy.Distance(t.Steps, t.Height)
+	speed := spentenergy.MeanSpeed(t.Steps, t.Height, t.Duration)
+
+	return fmt.Sprintf(
+		"Тип тренировки: %s\n"+
+			"Длительность: %.2f ч.\n"+
+			"Дистанция: %.2f км.\n"+
+			"Скорость: %.2f км/ч\n"+
+			"Сожгли калорий: %.2f\n",
+		t.TrainingType, t.Duration.Hours(), distance, speed, energy,
+	), nil
 }
 
-func (t *Training) Print() (string, error) {
-	var strSteps = fmt.Sprintf("%d\n", t.Steps)
-	var strTrainingType = fmt.Sprintf("%s\n", t.TrainingType)
-	var strDuration = fmt.Sprintf("%d\n", t.Duration)
-	var strTraining = strSteps + strTrainingType + strDuration
-	return fmt.Sprintf("%s", strTraining), nil
+// Print выводит краткую информацию о тренировке.
+func (t *Training) Print() {
+	fmt.Printf("%d\n%s\n%s\n", t.Steps, t.TrainingType, t.Duration)
 }
