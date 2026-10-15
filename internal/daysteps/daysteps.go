@@ -20,6 +20,8 @@ type DaySteps struct {
 func (ds *DaySteps) Parse(dataset string) (err error) {
 	data := strings.Split(dataset, ",")
 	var parseErr error
+	var stepsErr error
+	var durationErr error
 	if len(data) != 2 {
 		ds.Steps = 0
 		ds.Duration = 0
@@ -27,9 +29,9 @@ func (ds *DaySteps) Parse(dataset string) (err error) {
 		return fmt.Errorf("%w", parseErr)
 	}
 
-	dataSteps, parseErr := strconv.Atoi(data[0])
-	dataDuration, parseErr := time.ParseDuration(data[1])
-	if dataSteps <= 0 || dataDuration <= 0 {
+	dataSteps, stepsErr := strconv.Atoi(data[0])
+	dataDuration, durationErr := time.ParseDuration(data[1])
+	if dataSteps <= 0 || dataDuration <= 0 || stepsErr != nil || durationErr != nil {
 		ds.Duration = 0
 		ds.Steps = 0
 		parseErr = fitneserrors.ErrInvalidDataFormat

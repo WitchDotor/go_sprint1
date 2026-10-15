@@ -20,34 +20,32 @@ type Training struct {
 
 func (t *Training) Parse(dataset string) (err error) {
 	data := strings.Split(dataset, ",")
+	var stepsErr error
+	var durationErr error
 	if len(data) != 3 {
 		t.Steps = 0
 		t.TrainingType = ""
 		t.Duration = 0
 		return fmt.Errorf("%w", fitneserrors.ErrTrainingType)
 	}
+	steps, stepsErr := strconv.Atoi(data[0])
+	trainingType := data[1]
+	trainingDuration, durationErr := time.ParseDuration(data[2])
 
-	for i := range data {
-		if data[i] == "" {
-			t.Steps = 0
-			t.TrainingType = ""
-			t.Duration = 0
-			return fmt.Errorf("%w", fitneserrors.ErrTrainingType)
-
-		}
-		if i == 1 {
-			if data[i] != "Бег" && data[i] != "Ходьба" {
-				t.Steps = 0
-				t.TrainingType = ""
-				t.Duration = 0
-				return fmt.Errorf("%w", fitneserrors.ErrTrainingType)
-			}
-		}
+	if steps <= 0 || trainingDuration <= 0 || stepsErr != nil || durationErr != nil {
+		t.Steps = 0
+		t.TrainingType = ""
+		t.Duration = 0
+		return fmt.Errorf("%w", fitneserrors.ErrTrainingType)
 	}
 
-	t.Steps, _ = strconv.Atoi(data[0])
+	if trainingType != "Бег" && trainingType != "Ходьба" {
+		trainingType = "Неизвестный тип тренировки"
+	}
+
+	t.Steps = steps
 	t.TrainingType = data[1]
-	t.Duration, _ = time.ParseDuration(data[2])
+	t.Duration = trainingDuration
 	return nil
 }
 
@@ -70,18 +68,18 @@ func (t Training) ActionInfo() (string, error) {
 	if energyError != nil {
 		return "", energyError
 	}
-	var distance = float64(t.Duration) * speed
-	var strType = fmt.Sprintf("Тип тренировки: %s.\n", t.TrainingType)
-	var strDur = fmt.Sprintf("Длительность: %ds.\n", t.Duration)
-	var strDist = fmt.Sprintf("Дистанция: %.2f.\n", distance)
-	var strSpeed = fmt.Sprintf("Скорость: %.2f.\n", speed)
-	var strEnergy = fmt.Sprintf("Сожжено калорий: %.0f.\n", energy)
+	var distance = spentenergy.Distance(t.Steps, height)
+	var strType = fmt.Sprintf("Тип тренировки: %s\n", t.TrainingType)
+	var strDur = fmt.Sprintf("Длительность: %.2f ч.\n", t.Duration.Hours())
+	var strDist = fmt.Sprintf("Дистанция: %.2f км.\n", distance)
+	var strSpeed = fmt.Sprintf("Скорость: %.2f км/ч\n", speed)
+	var strEnergy = fmt.Sprintf("Сожгли калорий: %.2f\n", energy)
 	var strTraining = strType + strDur + strDist + strSpeed + strEnergy
 	return fmt.Sprintf("%s", strTraining), nil
 }
 
 func (t *Training) Print() (string, error) {
-	var strSteps = fmt.Sprintf("%i\n", t.Steps)
+	var strSteps = fmt.Sprintf("%d\n", t.Steps)
 	var strTrainingType = fmt.Sprintf("%s\n", t.TrainingType)
 	var strDuration = fmt.Sprintf("%d\n", t.Duration)
 	var strTraining = strSteps + strTrainingType + strDuration
